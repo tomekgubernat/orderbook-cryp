@@ -1,3 +1,4 @@
+import * as React from "react";
 // material
 import {
   alpha,
@@ -11,6 +12,10 @@ import {
   Container,
   Typography,
   useMediaQuery,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@material-ui/core";
 //
 import { varFadeInUp, MotionInView, varFadeInDown } from "../../animate";
@@ -89,30 +94,6 @@ const CardStyle = styled(Card)(({ theme }) => {
   };
 });
 
-const data = {
-  status: "Ok",
-  sell: [
-    {
-      ra: "25285.31",
-      ca: "0.02839638",
-      sa: "0.02839638",
-      pa: "0.02839638",
-      co: 1,
-    },
-  ],
-  buy: [
-    {
-      ra: "25280",
-      ca: "0.82618498",
-      sa: "3.59999",
-      pa: "0.82618498",
-      co: 1,
-    },
-  ],
-  timestamp: "1529512856512",
-  seqNo: "139098",
-};
-
 // ----------------------------------------------------------------------
 
 export default function LandingOrderbook() {
@@ -120,40 +101,103 @@ export default function LandingOrderbook() {
   const isLight = theme.palette.mode === "light";
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
 
-  const [dataFromApi, setDataFromApi] = useState();
+  const [code, setCode] = React.useState("BTC-PLN");
+  const [codeList, setCodeList] = React.useState([]);
+  const [selectedCurrency, setSelectedCurrency] = React.useState("PLN");
+  const [statistics, setStatistics] = React.useState();
+
+  const [orderbook, setOrderbook] = useState();
 
   const fetchData = async () => {
     const limit = 10;
 
     try {
       const response = await axios.get(
-        `/trading/orderbook-limited/BTC-PLN/${limit}`
+        `/trading/orderbook-limited/${code}/${limit}`
       );
-      console.log(response);
-      if (response.data.status === "Ok") setDataFromApi(response.data);
+      //console.log("fetchData", response);
+      if (response.data.status === "Ok") setOrderbook(response.data);
     } catch (error) {
       console.error(error);
     }
   };
 
+  const fetchStatistics = async () => {
+    try {
+      const response = await axios.get(`/trading/stats/${code}`);
+      //console.log("fetchStatistics", response);
+      if (response.data.status === "Ok") setStatistics(response.data.stats);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchTicker = async () => {
+    try {
+      const response = await axios.get(`/trading/ticker`);
+      //console.log("fetchTicker", response);
+      let codeList = await createCodeList(response.data);
+      setCodeList(codeList);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const createCodeList = (data) => {
+    let codeList = [];
+    Object.entries(data.items).forEach(([key]) => {
+      codeList.push({
+        value: key,
+      });
+    });
+    return codeList;
+  };
+
+  const getCurrencyName = (code) => {
+    const words = code.split("-");
+    return words[1];
+  };
+
   useEffect(() => {
     fetchData();
+    fetchTicker();
+    fetchStatistics();
   }, []);
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     console.log('Data is fetching every second!');
-  //     fetchData();
-  //   }, 1000);
-  //   return () => clearInterval(interval);
-  // }, []);
+  useEffect(() => {
+    const fetchNewData = async () => {
+      await fetchData();
+      fetchStatistics();
+    };
 
-  const selectedCurrency = "USD";
+    fetchNewData();
+  }, [code]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log("Data is fetching every 5 seconds!");
+      fetchData();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleChange = (event) => {
+    setCode(event.target.value);
+    let codeName = getCurrencyName(event.target.value);
+    setSelectedCurrency(codeName);
+  };
+
+  const countSpread = () => {
+    let bidPrice = orderbook?.buy ? orderbook.buy?.[0]?.ra : 0;
+    let askPrice = orderbook?.sell ? orderbook.sell?.[0]?.ra : 0;
+    let result = (askPrice - bidPrice).toFixed(2);
+    return result;
+  };
 
   return (
     <RootStyle>
       <Container maxWidth="lg">
-        <Box sx={{ mb: { xs: 10, md: 25 } }}>
+        <Box sx={{ mb: { xs: 10, md: 10 } }}>
           <MotionInView variants={varFadeInUp}>
             <Typography
               component="p"
@@ -168,6 +212,73 @@ export default function LandingOrderbook() {
               Check out the best odds below
             </Typography>
           </MotionInView>
+        </Box>
+
+        <Box sx={{ mb: { xs: 25, md: 20 } }}>
+          <Grid container spacing={isDesktop ? 10 : 5}>
+            <Grid item xs={12} md={3} alignItems="center">
+              <MotionInView variants={varFadeInUp}>
+                <FormControl fullWidth>
+                  <Select
+                    labelId="demo-simple-select-label"
+                    id="demo-simple-select"
+                    value={code}
+                    // label="Pair"
+                    onChange={handleChange}
+                    sx={{ textAlign: "center" }}
+                  >
+                    {codeList.map((code) => (
+                      <MenuItem value={code.value}>{code.value}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </MotionInView>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <MotionInView variants={varFadeInUp}>
+                <Typography
+                  component="p"
+                  variant="overline"
+                  sx={{ mb: 2, color: "text.secondary", textAlign: "center" }}
+                >
+                  spread
+                </Typography>
+
+                <Typography variant="h4" sx={{ textAlign: "center" }}>
+                  {countSpread()}
+                </Typography>
+              </MotionInView>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <MotionInView variants={varFadeInUp}>
+                <Typography
+                  component="p"
+                  variant="overline"
+                  sx={{ mb: 2, color: "text.secondary", textAlign: "center" }}
+                >
+                  Highest • 24H
+                </Typography>
+
+                <Typography variant="h4" sx={{ textAlign: "center" }}>
+                  {statistics?.h || 0}
+                </Typography>
+              </MotionInView>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <MotionInView variants={varFadeInUp}>
+                <Typography
+                  component="p"
+                  variant="overline"
+                  sx={{ mb: 2, color: "text.secondary", textAlign: "center" }}
+                >
+                  Lowest • 24h
+                </Typography>
+                <Typography variant="h4" sx={{ textAlign: "center" }}>
+                  {statistics?.l || 0}
+                </Typography>
+              </MotionInView>
+            </Grid>
+          </Grid>
         </Box>
 
         <Grid container spacing={isDesktop ? 10 : 5}>
@@ -191,7 +302,7 @@ export default function LandingOrderbook() {
                     {card.description}
                   </Typography>
                   <OrderTable
-                    data={dataFromApi}
+                    data={orderbook}
                     type={card.title}
                     currency={selectedCurrency}
                   />
