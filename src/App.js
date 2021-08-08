@@ -1,24 +1,30 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState, useEffect } from "react";
+// routes
+import Router from "./routes";
+// theme
+import ThemeConfig from "./theme";
+
+import LoadingScreen from "./components/LoadingScreen";
+import ThemePrimaryColor from "./components/ThemePrimaryColor";
 
 function App() {
+  const delay = 1;
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let timer1 = setTimeout(() => setLoading(true), delay * 1000);
+
+    return () => {
+      clearTimeout(timer1);
+    };
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeConfig>
+      <ThemePrimaryColor>
+        {loading ? <Router /> : <LoadingScreen />}
+      </ThemePrimaryColor>
+    </ThemeConfig>
   );
 }
 
