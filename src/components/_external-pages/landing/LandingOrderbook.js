@@ -214,7 +214,7 @@ export default function LandingOrderbook() {
           </MotionInView>
         </Box>
 
-        <Box sx={{ mb: { xs: 25, md: 20 } }}>
+        <Box sx={{ mb: { xs: 10, md: 20 } }}>
           <Grid container spacing={isDesktop ? 10 : 5}>
             <Grid item xs={12} md={3} alignItems="center">
               <MotionInView variants={varFadeInUp}>
@@ -259,7 +259,10 @@ export default function LandingOrderbook() {
                   Highest • 24H
                 </Typography>
 
-                <Typography variant="h4" sx={{ textAlign: "center" }}>
+                <Typography
+                  variant="h4"
+                  sx={{ textAlign: "center", color: "green" }}
+                >
                   {statistics?.h || 0}
                 </Typography>
               </MotionInView>
@@ -273,7 +276,10 @@ export default function LandingOrderbook() {
                 >
                   Lowest • 24h
                 </Typography>
-                <Typography variant="h4" sx={{ textAlign: "center" }}>
+                <Typography
+                  variant="h4"
+                  sx={{ textAlign: "center", color: "red" }}
+                >
                   {statistics?.l || 0}
                 </Typography>
               </MotionInView>
