@@ -15,7 +15,12 @@ import {
 //
 import { varFadeInUp, MotionInView, varFadeInDown } from "../../animate";
 
-//import OrderTable from "./OrderTable";
+import OrderTable from "./OrderTable";
+
+//utils
+import axios from "../../../utils/axios";
+
+import { useState, useEffect } from "react";
 
 // ----------------------------------------------------------------------
 
@@ -84,12 +89,66 @@ const CardStyle = styled(Card)(({ theme }) => {
   };
 });
 
+const data = {
+  status: "Ok",
+  sell: [
+    {
+      ra: "25285.31",
+      ca: "0.02839638",
+      sa: "0.02839638",
+      pa: "0.02839638",
+      co: 1,
+    },
+  ],
+  buy: [
+    {
+      ra: "25280",
+      ca: "0.82618498",
+      sa: "3.59999",
+      pa: "0.82618498",
+      co: 1,
+    },
+  ],
+  timestamp: "1529512856512",
+  seqNo: "139098",
+};
+
 // ----------------------------------------------------------------------
 
 export default function LandingOrderbook() {
   const theme = useTheme();
   const isLight = theme.palette.mode === "light";
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
+
+  const [dataFromApi, setDataFromApi] = useState();
+
+  const fetchData = async () => {
+    const limit = 10;
+
+    try {
+      const response = await axios.get(
+        `/trading/orderbook-limited/BTC-PLN/${limit}`
+      );
+      console.log(response);
+      if (response.data.status === "Ok") setDataFromApi(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     console.log('Data is fetching every second!');
+  //     fetchData();
+  //   }, 1000);
+  //   return () => clearInterval(interval);
+  // }, []);
+
+  const selectedCurrency = "USD";
 
   return (
     <RootStyle>
@@ -131,7 +190,11 @@ export default function LandingOrderbook() {
                   >
                     {card.description}
                   </Typography>
-                  {/* <OrderTable /> */}
+                  <OrderTable
+                    data={dataFromApi}
+                    type={card.title}
+                    currency={selectedCurrency}
+                  />
                 </CardStyle>
               </MotionInView>
             </Grid>
