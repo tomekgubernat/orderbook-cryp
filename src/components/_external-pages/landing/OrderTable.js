@@ -6,22 +6,6 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 
-// function createData(exchangeRate, amountBTC, pricePLN, offers) {
-//   return { exchangeRate, amountBTC, pricePLN, offers };
-// }
-
-// //data for test
-// const rows = [
-//   createData(42305.88, 0.016, 676.9, 24),
-//   createData(42305.89, 0.016, 1410.2, 37),
-//   createData(40100.0, 2.62836675, 1000.0, 24),
-//   createData(46000.0, 0.016, 1000.0, 67),
-//   createData(42305.88, 0.016, 676.9, 24),
-//   createData(42305.89, 0.016, 1410.2, 37),
-//   createData(40100.0, 2.62836675, 1000.0, 24),
-//   createData(46000.0, 0.016, 1000.0, 67),
-// ];
-
 export default function OrderTable({ data, type, currency }) {
   let orderData = [];
 

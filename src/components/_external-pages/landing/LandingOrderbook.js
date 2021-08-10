@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState, useEffect } from "react";
 // material
 import {
   alpha,
@@ -17,15 +18,13 @@ import {
   Select,
   MenuItem,
 } from "@material-ui/core";
-//
-import { varFadeInUp, MotionInView, varFadeInDown } from "../../animate";
 
+// components
+import { varFadeInUp, MotionInView, varFadeInDown } from "../../animate";
 import OrderTable from "./OrderTable";
 
 //utils
 import axios from "../../../utils/axios";
-
-import { useState, useEffect } from "react";
 
 // ----------------------------------------------------------------------
 
@@ -101,21 +100,18 @@ export default function LandingOrderbook() {
   const isLight = theme.palette.mode === "light";
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
 
-  const [code, setCode] = React.useState("BTC-PLN");
+  const [code, setCode] = React.useState("BTC-PLN"); //default value "BTC-PLN"
   const [codeList, setCodeList] = React.useState([]);
-  const [selectedCurrency, setSelectedCurrency] = React.useState("PLN");
+  const [selectedCurrency, setSelectedCurrency] = React.useState("PLN"); //default value PLN
   const [statistics, setStatistics] = React.useState();
-
   const [orderbook, setOrderbook] = useState();
 
   const fetchData = async () => {
-    const limit = 10;
-
+    const limit = 10; //limit of rows data
     try {
       const response = await axios.get(
         `/trading/orderbook-limited/${code}/${limit}`
       );
-      //console.log("fetchData", response);
       if (response.data.status === "Ok") setOrderbook(response.data);
     } catch (error) {
       console.error(error);
@@ -125,22 +121,56 @@ export default function LandingOrderbook() {
   const fetchStatistics = async () => {
     try {
       const response = await axios.get(`/trading/stats/${code}`);
-      //console.log("fetchStatistics", response);
       if (response.data.status === "Ok") setStatistics(response.data.stats);
     } catch (error) {
       console.error(error);
     }
   };
 
+  //fetching markets code
   const fetchTicker = async () => {
     try {
       const response = await axios.get(`/trading/ticker`);
-      //console.log("fetchTicker", response);
-      let codeList = await createCodeList(response.data);
-      setCodeList(codeList);
+      if (response.data.status !== "Ok") {
+        let codeList = await createCodeList(response.data);
+        setCodeList(codeList);
+      }
     } catch (error) {
       console.error(error);
     }
+  };
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      await fetchData();
+      fetchTicker();
+      fetchStatistics();
+    };
+
+    fetchInitialData();
+  }, []);
+
+  useEffect(() => {
+    const updateData = async () => {
+      await fetchData();
+      fetchStatistics();
+    };
+
+    updateData();
+  }, [code]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log("Data is fetching every 5 seconds!");
+      fetchData();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleChange = (event) => {
+    setCode(event.target.value);
+    let codeName = getCurrencyName(event.target.value);
+    setSelectedCurrency(codeName);
   };
 
   const createCodeList = (data) => {
@@ -156,35 +186,6 @@ export default function LandingOrderbook() {
   const getCurrencyName = (code) => {
     const words = code.split("-");
     return words[1];
-  };
-
-  useEffect(() => {
-    fetchData();
-    fetchTicker();
-    fetchStatistics();
-  }, []);
-
-  useEffect(() => {
-    const fetchNewData = async () => {
-      await fetchData();
-      fetchStatistics();
-    };
-
-    fetchNewData();
-  }, [code]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log("Data is fetching every 5 seconds!");
-      fetchData();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleChange = (event) => {
-    setCode(event.target.value);
-    let codeName = getCurrencyName(event.target.value);
-    setSelectedCurrency(codeName);
   };
 
   const countSpread = () => {
@@ -223,7 +224,6 @@ export default function LandingOrderbook() {
                     labelId="demo-simple-select-label"
                     id="demo-simple-select"
                     value={code}
-                    // label="Pair"
                     onChange={handleChange}
                     sx={{ textAlign: "center" }}
                   >
