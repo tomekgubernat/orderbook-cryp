@@ -1,5 +1,5 @@
-import * as React from "react";
 import { useState, useEffect } from "react";
+import * as React from "react";
 // material
 import {
   alpha,
@@ -18,8 +18,7 @@ import {
   Select,
   MenuItem,
 } from "@material-ui/core";
-
-// components
+//components
 import { varFadeInUp, MotionInView, varFadeInDown } from "../../animate";
 import OrderTable from "./OrderTable";
 
@@ -131,7 +130,7 @@ export default function LandingOrderbook() {
   const fetchTicker = async () => {
     try {
       const response = await axios.get(`/trading/ticker`);
-      if (response.data.status !== "Ok") {
+      if (response.data.status === "Ok") {
         let codeList = await createCodeList(response.data);
         setCodeList(codeList);
       }
